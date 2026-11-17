@@ -94,7 +94,7 @@ public class DragonWingsModel extends Model<PlayerEntityRenderState> {
         float s = w.side;
         float time = state.age;
 
-        float move = MathHelper.clamp(state.limbAmplitudeMultiplier, 0f, 1f);
+        float move = MathHelper.clamp(state.limbSwingAmplitude, 0f, 1f);
 
         float flap = MathHelper.sin(time * (0.12f + 0.12f * move));
         float flapSize = 0.06f + 0.28f * move;
