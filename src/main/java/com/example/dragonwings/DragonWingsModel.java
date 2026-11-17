@@ -7,7 +7,7 @@ import net.minecraft.client.model.ModelPartBuilder;
 import net.minecraft.client.model.ModelPartData;
 import net.minecraft.client.model.ModelTransform;
 import net.minecraft.client.model.TexturedModelData;
-import net.minecraft.client.render.RenderLayer;
+import net.minecraft.client.render.RenderLayers;
 import net.minecraft.client.render.entity.model.EntityModelLayer;
 import net.minecraft.client.render.entity.state.PlayerEntityRenderState;
 import net.minecraft.util.Identifier;
@@ -43,37 +43,7 @@ public class DragonWingsModel extends Model<PlayerEntityRenderState> {
             this.side = side;
             this.root = rootOfModel.getChild(name + "_wing");
             this.forearm = this.root.getChild("forearm");
-            for (int i = 0; i < FINGERS; i++) {
-                this.fingers[i] = this.forearm.getChild("finger" + i);
-            }
-            for (int i = 0; i < FINGERS - 1; i++) {
-                this.membranes[i] = this.forearm.getChild("membrane" + i);
-            }
-        }
-    }
-
-    public DragonWingsModel(ModelPart root) {
-        super(root, RenderLayer::getEntityCutoutNoCull);
-        this.right = new Wing(root, "right", 1f);
-        this.left = new Wing(root, "left", -1f);
-    }
-
-    // ------------------------------------------------------------------
-    // Shape
-    // ------------------------------------------------------------------
-
-    public static TexturedModelData getTexturedModelData() {
-        ModelData data = new ModelData();
-        ModelPartData root = data.getRoot();
-        addWing(root, "right", 1f);
-        addWing(root, "left", -1f);
-        return TexturedModelData.of(data, 64, 64);
-    }
-
-    private static void addWing(ModelPartData root, String name, float s) {
-        // Shoulder, on the player's back.
-        ModelPartData wing = root.addChild(name + "_wing",
-                ModelPartBuilder.create().uv(0, 32).cuboid(s > 0 ? 0 : -UPPER_ARM, -1f, -1f, UPPER_ARM, 2f, 2f),
+            for (int i = 0; i  0 ? 0 : -UPPER_ARM, -1f, -1f, UPPER_ARM, 2f, 2f),
                 ModelTransform.origin(s * 2.5f, 2f, 2.5f));
 
         // Elbow.
@@ -121,25 +91,25 @@ public class DragonWingsModel extends Model<PlayerEntityRenderState> {
 
         // Shoulder: swing back against the body at rest, spread out when moving.
         float swingBack = 1.0f - 0.55f * move + flap * 0.05f;
-        w.root.yRot = -s * swingBack;
+        w.root.yaw = -s * swingBack;
         // Shoulder: lift up and down.
-        w.root.zRot = -s * (0.15f + flap * flapSize);
+        w.root.roll = -s * (0.15f + flap * flapSize);
 
         // Elbow: bends up, then folds in when the wing flaps down.
         float elbowUp = 0.7f - flap * flapSize * 0.8f;
-        w.forearm.zRot = -s * elbowUp;
+        w.forearm.roll = -s * elbowUp;
 
         // Fingers fan out downwards from the wrist, more when moving.
         float spread = 0.85f + 0.3f * move;
         for (int i = 0; i < FINGERS; i++) {
             float angle = spread * (0.5f + 0.5f * i) + flap * flapSize * 0.35f * i;
-            w.fingers[i].zRot = s * angle;
+            w.fingers[i].roll = s * angle;
         }
         // Each membrane sits halfway between two neighbouring fingers.
         for (int i = 0; i < FINGERS - 1; i++) {
             float a0 = spread * (0.5f + 0.5f * i) + flap * flapSize * 0.35f * i;
             float a1 = spread * (0.5f + 0.5f * (i + 1)) + flap * flapSize * 0.35f * (i + 1);
-            w.membranes[i].zRot = s * (a0 + a1) * 0.5f;
+            w.membranes[i].roll = s * (a0 + a1) * 0.5f;
         }
     }
 }
