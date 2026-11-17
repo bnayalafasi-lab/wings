@@ -1,7 +1,7 @@
 package com.example.dragonwings;
 
 import net.minecraft.client.render.OverlayTexture;
-import net.minecraft.client.render.RenderLayer;
+import net.minecraft.client.render.RenderLayers;
 import net.minecraft.client.render.command.OrderedRenderCommandQueue;
 import net.minecraft.client.render.entity.feature.FeatureRenderer;
 import net.minecraft.client.render.entity.feature.FeatureRendererContext;
@@ -37,7 +37,7 @@ public class DragonWingsFeatureRenderer extends FeatureRenderer<PlayerEntityRend
         this.model.setAngles(state);
         queue.submitModel(
                 this.model, state, matrices,
-                RenderLayer.getEntityCutoutNoCull(TEXTURE),
+                RenderLayers.entityCutoutNoCull(TEXTURE),
                 light, OverlayTexture.DEFAULT_UV, state.outlineColor, null);
 
         matrices.pop();
