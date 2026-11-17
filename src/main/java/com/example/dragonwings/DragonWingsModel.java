@@ -18,8 +18,8 @@ public class DragonWingsModel extends Model<PlayerEntityRenderState> {
             new EntityModelLayer(Identifier.of(DragonWingsClient.MOD_ID, "dragon_wings"), "main");
 
     private static final int FINGERS = 4;
-    private static final float UPPER_ARM = 9f;
-    private static final float FOREARM = 10f;
+    private static final float UPPER_ARM = 2.5f;
+    private static final float FOREARM = 2.5f;
     private static final float FINGER_LEN = 14f;
 
     private final Wing left;
@@ -64,7 +64,7 @@ public class DragonWingsModel extends Model<PlayerEntityRenderState> {
 
         ModelPartData wing = root.addChild(name + "_wing",
                 ModelPartBuilder.create().uv(0, 32).cuboid(isRight ? 0 : -UPPER_ARM, -1f, -1f, UPPER_ARM, 2f, 2f),
-                ModelTransform.origin(s * 2.5f, 2f, 2.5f));
+                ModelTransform.origin(s * 1.5f, 2.5f, 2.0f));
 
         ModelPartData forearm = wing.addChild("forearm",
                 ModelPartBuilder.create().uv(0, 32).cuboid(isRight ? 0 : -FOREARM, -1f, -1f, FOREARM, 2f, 2f),
@@ -76,7 +76,7 @@ public class DragonWingsModel extends Model<PlayerEntityRenderState> {
                     ModelTransform.origin(s * FOREARM, 0f, 0f));
         }
         for (int i = 0; i != FINGERS - 1; i++) {
-            float x0 = isRight ? 2f : -14f;
+            float x0 = isRight ? 0.5f : -12.5f;
             forearm.addChild("membrane" + i,
                     ModelPartBuilder.create().uv(0, 0).cuboid(x0, -3f, -0.25f, 12f, 6f, 0.5f),
                     ModelTransform.origin(s * FOREARM, 0f, 0f));
@@ -103,7 +103,7 @@ public class DragonWingsModel extends Model<PlayerEntityRenderState> {
         w.root.yaw = -s * swingBack;
         w.root.roll = -s * (0.15f + flap * flapSize);
 
-        float elbowUp = 0.7f - flap * flapSize * 0.8f;
+        float elbowUp = 0.55f - flap * flapSize * 0.8f;
         w.forearm.roll = -s * elbowUp;
 
         float spread = 0.85f + 0.3f * move;
