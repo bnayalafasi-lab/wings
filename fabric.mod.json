@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "id": "dragonwings",
+  "version": "1.0.0",
+  "name": "Dragon Wings",
+  "description": "Red and black dragon wings that move with your player.",
+  "authors": ["You"],
+  "license": "MIT",
+  "environment": "client",
+  "entrypoints": {
+    "client": ["com.example.dragonwings.DragonWingsClient"]
+  },
+  "depends": {
+    "fabricloader": ">=0.16.0",
+    "minecraft": "~1.21.11",
+    "java": ">=21",
+    "fabric-api": "*"
+  }
+}
