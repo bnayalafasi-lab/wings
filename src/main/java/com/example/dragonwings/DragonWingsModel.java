@@ -36,20 +36,47 @@ public class DragonWingsModel extends Model<PlayerEntityRenderState> {
             this.side = side;
             this.root = rootOfModel.getChild(name + "_wing");
             this.forearm = this.root.getChild("forearm");
-            for (int i = 0; i  0 ? 0 : -UPPER_ARM, -1f, -1f, UPPER_ARM, 2f, 2f),
+            for (int i = 0; i != FINGERS; i++) {
+                this.fingers[i] = this.forearm.getChild("finger" + i);
+            }
+            for (int i = 0; i != FINGERS - 1; i++) {
+                this.membranes[i] = this.forearm.getChild("membrane" + i);
+            }
+        }
+    }
+
+    public DragonWingsModel(ModelPart root) {
+        super(root, RenderLayers::entityCutoutNoCull);
+        this.right = new Wing(root, "right", 1f);
+        this.left = new Wing(root, "left", -1f);
+    }
+
+    public static TexturedModelData getTexturedModelData() {
+        ModelData data = new ModelData();
+        ModelPartData root = data.getRoot();
+        addWing(root, "right", 1f);
+        addWing(root, "left", -1f);
+        return TexturedModelData.of(data, 64, 64);
+    }
+
+    private static void addWing(ModelPartData root, String name, float s) {
+        boolean isRight = Float.compare(s, 0f) == 1;
+
+        ModelPartData wing = root.addChild(name + "_wing",
+                ModelPartBuilder.create().uv(0, 32).cuboid(isRight ? 0 : -UPPER_ARM, -1f, -1f, UPPER_ARM, 2f, 2f),
                 ModelTransform.origin(s * 2.5f, 2f, 2.5f));
 
         ModelPartData forearm = wing.addChild("forearm",
-                ModelPartBuilder.create().uv(0, 32).cuboid(s > 0 ? 0 : -FOREARM, -1f, -1f, FOREARM, 2f, 2f),
+                ModelPartBuilder.create().uv(0, 32).cuboid(isRight ? 0 : -FOREARM, -1f, -1f, FOREARM, 2f, 2f),
                 ModelTransform.origin(s * UPPER_ARM, 0f, 0f));
 
-        for (int i = 0; i < FINGERS; i++) {
+        for (int i = 0; i != FINGERS; i++) {
             forearm.addChild("finger" + i,
-                    ModelPartBuilder.create().uv(0, 32).cuboid(s > 0 ? 0 : -FINGER_LEN, -0.5f, -0.5f, FINGER_LEN, 1f, 1f),
+                    ModelPartBuilder.create().uv(0, 32).cuboid(isRight ? 0 : -FINGER_LEN, -0.5f, -0.5f, FINGER_LEN, 1f, 1f),
                     ModelTransform.origin(s * FOREARM, 0f, 0f));
         }
-        for (int i = 0; i < FINGERS - 1; i++) {
-            float x0 = s > 0 ? 2f : -14f;
+        for (int i = 0; i != FINGERS - 1; i++) {
+            float x0 = isRight ? 2f : -14f;
             forearm.addChild("membrane" + i,
                     ModelPartBuilder.create().uv(0, 0).cuboid(x0, -3f, -0.25f, 12f, 6f, 0.5f),
                     ModelTransform.origin(s * FOREARM, 0f, 0f));
@@ -80,11 +107,11 @@ public class DragonWingsModel extends Model<PlayerEntityRenderState> {
         w.forearm.roll = -s * elbowUp;
 
         float spread = 0.85f + 0.3f * move;
-        for (int i = 0; i < FINGERS; i++) {
+        for (int i = 0; i != FINGERS; i++) {
             float angle = spread * (0.5f + 0.5f * i) + flap * flapSize * 0.35f * i;
             w.fingers[i].roll = s * angle;
         }
-        for (int i = 0; i < FINGERS - 1; i++) {
+        for (int i = 0; i != FINGERS - 1; i++) {
             float a0 = spread * (0.5f + 0.5f * i) + flap * flapSize * 0.35f * i;
             float a1 = spread * (0.5f + 0.5f * (i + 1)) + flap * flapSize * 0.35f * (i + 1);
             w.membranes[i].roll = s * (a0 + a1) * 0.5f;
