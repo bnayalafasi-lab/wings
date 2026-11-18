@@ -18,9 +18,9 @@ public class DragonWingsModel extends Model<PlayerEntityRenderState> {
             new EntityModelLayer(Identifier.of(DragonWingsClient.MOD_ID, "dragon_wings"), "main");
 
     private static final int FINGERS = 4;
-    private static final float UPPER_ARM = 2.5f;
-    private static final float FOREARM = 2.5f;
-    private static final float FINGER_LEN = 14f;
+    private static final float UPPER_ARM = 4.0f;
+    private static final float FOREARM = 5.5f;
+    private static final float[] FINGER_LENGTHS = {16.0f, 14.0f, 11.5f, 8.5f};
 
     private final Wing left;
     private final Wing right;
@@ -62,23 +62,54 @@ public class DragonWingsModel extends Model<PlayerEntityRenderState> {
     private static void addWing(ModelPartData root, String name, float s) {
         boolean isRight = Float.compare(s, 0f) == 1;
 
+        // Tucked close onto the upper back
         ModelPartData wing = root.addChild(name + "_wing",
-                ModelPartBuilder.create().uv(0, 32).cuboid(isRight ? 0 : -UPPER_ARM, -1f, -1f, UPPER_ARM, 2f, 2f),
+                ModelPartBuilder.create().uv(0, 32)
+                        .cuboid(isRight ? 0 : -UPPER_ARM, -1.25f, -1.25f, UPPER_ARM, 2.5f, 2.5f),
                 ModelTransform.origin(s * 1.5f, 2.5f, 2.0f));
 
+        // Forearm creates the top peak of the bat/dragon wing
         ModelPartData forearm = wing.addChild("forearm",
-                ModelPartBuilder.create().uv(0, 32).cuboid(isRight ? 0 : -FOREARM, -1f, -1f, FOREARM, 2f, 2f),
+                ModelPartBuilder.create().uv(0, 32)
+                        .cuboid(isRight ? 0 : -FOREARM, -1.0f, -1.0f, FOREARM, 2.0f, 2.0f),
                 ModelTransform.origin(s * UPPER_ARM, 0f, 0f));
 
+        // Sharp curved wing-claw spike on the top peak
+        ModelPartData clawBase = forearm.addChild("claw_base",
+                ModelPartBuilder.create().uv(0, 32)
+                        .cuboid(-0.6f, -3.2f, -0.6f, 1.2f, 3.2f, 1.2f),
+                ModelTransform.of(s * FOREARM, -0.5f, 0f, 0.35f, 0f, s * 0.25f));
+
+        clawBase.addChild("claw_tip",
+                ModelPartBuilder.create().uv(0, 32)
+                        .cuboid(-0.4f, -2.5f, -0.4f, 0.8f, 2.5f, 0.8f),
+                ModelTransform.of(0f, -3.0f, 0f, 0.45f, 0f, -s * 0.35f));
+
+        // Inner webbing connecting the forearm arch to the torso
+        float innerX = isRight ? 0.5f : -(FOREARM + 0.5f);
+        forearm.addChild("inner_membrane",
+                ModelPartBuilder.create().uv(0, 0)
+                        .cuboid(innerX, 0.2f, -0.25f, FOREARM, 7.5f, 0.5f),
+                ModelTransform.NONE);
+
+        // Tapered dragon finger bones (long at top, shorter toward the bottom)
         for (int i = 0; i != FINGERS; i++) {
+            float len = FINGER_LENGTHS[i];
+            float thickness = i == 0 ? 1.2f : 0.9f;
+            float half = thickness * 0.5f;
             forearm.addChild("finger" + i,
-                    ModelPartBuilder.create().uv(0, 32).cuboid(isRight ? 0 : -FINGER_LEN, -0.5f, -0.5f, FINGER_LEN, 1f, 1f),
+                    ModelPartBuilder.create().uv(0, 32)
+                            .cuboid(isRight ? 0 : -len, -half, -half, len, thickness, thickness),
                     ModelTransform.origin(s * FOREARM, 0f, 0f));
         }
+
+        // Tapered membrane panels stretched between each pair of fingers
         for (int i = 0; i != FINGERS - 1; i++) {
-            float x0 = isRight ? 0.5f : -12.5f;
+            float memLen = (FINGER_LENGTHS[i] + FINGER_LENGTHS[i + 1]) * 0.5f - 1.5f;
+            float x0 = isRight ? 0.5f : -(memLen + 0.5f);
             forearm.addChild("membrane" + i,
-                    ModelPartBuilder.create().uv(0, 0).cuboid(x0, -3f, -0.25f, 12f, 6f, 0.5f),
+                    ModelPartBuilder.create().uv(0, 0)
+                            .cuboid(x0, -3.2f, -0.25f, memLen, 6.4f, 0.5f),
                     ModelTransform.origin(s * FOREARM, 0f, 0f));
         }
     }
@@ -96,24 +127,34 @@ public class DragonWingsModel extends Model<PlayerEntityRenderState> {
 
         float move = MathHelper.clamp(state.limbSwingAmplitude, 0f, 1f);
 
-        float flap = MathHelper.sin(time * (0.12f + 0.12f * move));
-        float flapSize = 0.06f + 0.28f * move;
+        // Smooth, weighty dragon wingbeat
+        float speed = 0.10f + 0.14f * move;
+        float flap = MathHelper.sin(time * speed);
+        float flapFollow = MathHelper.sin(time * speed - 0.65f);
+        float flapSize = 0.08f + 0.30f * move;
 
-        float swingBack = 1.0f - 0.55f * move + flap * 0.05f;
+        // Shoulder: tucked back at rest, flares open when moving, sweeps with each stroke
+        float swingBack = 0.85f - 0.45f * move + flapFollow * 0.08f;
         w.root.yaw = -s * swingBack;
-        w.root.roll = -s * (0.15f + flap * flapSize);
+        // Negative roll on right wing lifts the shoulder upward into a dramatic arch
+        w.root.roll = -s * (0.42f + flap * flapSize);
+        w.root.pitch = 0.12f + flap * 0.05f;
 
-        float elbowUp = 0.55f - flap * flapSize * 0.8f;
-        w.forearm.roll = -s * elbowUp;
+        // Elbow: bends sharply downward from the high shoulder peak
+        float elbowBend = 0.95f - flapFollow * flapSize * 0.75f;
+        w.forearm.roll = s * elbowBend;
 
-        float spread = 0.85f + 0.3f * move;
+        // Fingers fan out into jagged dragon points with a trailing wave motion
+        float spread = 0.38f + 0.14f * move;
         for (int i = 0; i != FINGERS; i++) {
-            float angle = spread * (0.5f + 0.5f * i) + flap * flapSize * 0.35f * i;
+            float angle = 0.15f + spread * i + flapFollow * flapSize * 0.25f * i;
             w.fingers[i].roll = s * angle;
         }
+
+        // Each membrane sits centered between its two neighboring fingers
         for (int i = 0; i != FINGERS - 1; i++) {
-            float a0 = spread * (0.5f + 0.5f * i) + flap * flapSize * 0.35f * i;
-            float a1 = spread * (0.5f + 0.5f * (i + 1)) + flap * flapSize * 0.35f * (i + 1);
+            float a0 = 0.15f + spread * i + flapFollow * flapSize * 0.25f * i;
+            float a1 = 0.15f + spread * (i + 1) + flapFollow * flapSize * 0.25f * (i + 1);
             w.membranes[i].roll = s * (a0 + a1) * 0.5f;
         }
     }
